@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wordwars Game</title> <!-- Updated title in the head -->
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c; /* Dark background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: #e2e8f0; /* Light text */
+        }
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1.5rem;
+            background-color: #2d3748; /* Slightly lighter dark background for container */
+            border-radius: 0.75rem; /* Rounded corners */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            max-width: 90%; /* Fluid width */
+            width: 400px; /* Max width for desktop */
+        }
+        .grid-container {
+            display: grid;
+            grid-template-rows: repeat(6, 1fr); /* 6 rows for guesses */
+            grid-template-columns: repeat(5, 1fr); /* 5 columns for letters */
+            gap: 0.5rem; /* Gap between tiles */
+            width: 100%;
+            max-width: 350px; /* Max width for the grid */
+            margin-bottom: 1.5rem;
+        }
+        .tile {
+            width: 100%;
+            height: 0;
+            padding-bottom: 100%; /* Makes tiles square */
+            background-color: #4a5568; /* Default tile background */
+            border: 2px solid #a0aec0; /* Default border */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.875rem; /* 3xl */
+            font-weight: 700; /* Bold */
+            text-transform: uppercase;
+            border-radius: 0.375rem; /* Rounded corners */
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+            line-height: 1; /* Ensures text is perfectly centered vertically */
+        }
+        .tile.correct {
+            background-color: #48bb78; /* Green */
+            border-color: #48bb78;
+            color: #fff;
+        }
+        .tile.present {
+            background-color: #ecc94b; /* Yellow */
+            border-color: #ecc94b;
+            color: #fff;
+        }
+        .tile.absent {
+            background-color: #718096; /* Gray */
+            border-color: #718096;
+            color: #fff;
+        }
+        .keyboard-row {
+            display: flex;
+            justify-content: center;
+            gap: 0.375rem; /* Gap between keys */
+            margin-bottom: 0.5rem;
+            width: 100%;
+        }
+        .key {
+            background-color: #4a5568; /* Key background */
+            color: #e2e8f0;
+            padding: 0.75rem 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-transform: uppercase;
+            transition: background-color 0.2s ease;
+            min-width: 2.2rem; /* Minimum width for keys */
+        }
+        .key:hover {
+            background-color: #616e7f;
+        }
+        .key.large {
+            flex-grow: 1.5; /* Larger keys for Enter/Backspace */
+            min-width: 3.5rem;
+        }
+        .key.correct-key {
+            background-color: #48bb78; /* Green */
+        }
+        .key.present-key {
+            background-color: #ecc94b; /* Yellow */
+        }
+        .key.absent-key {
+            background-color: #718096; /* Gray */
+            border-color: #718096; /* Ensure border also changes */
+            color: #fff;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: #2d3748;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            max-width: 90%;
+            width: 350px;
+        }
+        .modal-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #e2e8f0;
+        }
+        .modal-message {
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+            color: #cbd5e0;
+        }
+        .modal-button {
+            background-color: #4299e1; /* Blue */
+            color: #fff;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-size: 1.125rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            margin-top: 1rem; /* Spacing for multiple buttons */
+        }
+        .modal-button:hover {
+            background-color: #3182ce;
+        }
+        .definition-text {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: #a0aec0;
+            max-height: 100px; /* Limit height */
+            overflow-y: auto; /* Add scroll if content overflows */
+            padding: 0.5rem;
+            border: 1px solid #4a5568;
+            border-radius: 0.375rem;
+            text-align: left;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #4299e1;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="text-3xl font-bold mb-6 text-center">Wordwars</h1> <!-- Updated title in the body -->
+        <div id="game-grid" class="grid-container">
+            <!-- Grid tiles will be generated here by JavaScript -->
+        </div>
+        <div id="keyboard" class="w-full max-w-4xl">
+            <div class="keyboard-row">
+                <button class="key" data-key="q">q</button>
+                <button class="key" data-key="w">w</button>
+                <button class="key" data-key="e">e</button>
+                <button class="key" data-key="r">r</button>
+                <button class="key" data-key="t">t</button>
+                <button class="key" data-key="y">y</button>
+                <button class="key" data-key="u">u</button>
+                <button class="key" data-key="i">i</button>
+                <button class="key" data-key="o">o</button>
+                <button class="key" data-key="p">p</button>
+            </div>
+            <div class="keyboard-row">
+                <div class="flex-grow-0.5"></div> <!-- Spacer for alignment -->
+                <button class="key" data-key="a">a</button>
+                <button class="key" data-key="s">s</button>
+                <button class="key" data-key="d">d</button>
+                <button class="key" data-key="f">f</button>
+                <button class="key" data-key="g">g</button>
+                <button class="key" data-key="h">h</button>
+                <button class="key" data-key="j">j</button>
+                <button class="key" data-key="k">k</button>
+                <button class="key" data-key="l">l</button>
+                <div class="flex-grow-0.5"></div> <!-- Spacer for alignment -->
+            </div>
+            <div class="keyboard-row">
+                <button class="key large" data-key="enter">Enter</button>
+                <button class="key" data-key="z">z</button>
+                <button class="key" data-key="x">x</button>
+                <button class="key" data-key="c">c</button>
+                <button class="key" data-key="v">v</button>
+                <button class="key" data-key="b">b</button>
+                <button class="key" data-key="n">n</button>
+                <button class="key" data-key="m">m</button>
+                <button class="key large" data-key="backspace">Backspace</button>
+            </div>
+        </div>
+        <p class="text-sm mt-4 text-gray-400">Created for curious minds by Suja Shivani</p>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="gameOverModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2 id="modalTitle" class="modal-title"></h2>
+            <p id="modalMessage" class="modal-message"></p>
+            <div id="definitionContainer"></div> <!-- Container for definition -->
+            <button id="getDefinitionButton" class="modal-button mb-2">Get Definition ✨</button>
+            <button id="playAgainButton" class="modal-button">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        // Array of possible words for the game
+        const WORDS = [
+            "apple", "baker", "crane", "dream", "earth", "flame", "grape", "house",
+            "igloo", "jolly", "knife", "lemon", "mango", "night", "ocean", "peach",
+            "queen", "river", "sugar", "table", "unity", "vowel", "whale", "xerox",
+            "yacht", "zebra", "brave", "charm", "daisy", "eagle", "fairy", "giant",
+            "happy", "ideal", "jumps", "karma", "light", "magic", "noble", "olive",
+            "piano", "quiet", "robot", "smile", "tiger", "umbra", "vivid", "watch",
+            "xenon", "yield", "zones", "abide", "bless", "climb", "dwarf", "empty",
+            "frost", "glows", "hatch", "irony", "joust", "kudos", "lucky", "mirth",
+            "nylon", "oasis", "pride", "quilt", "roast", "shard", "towel", "unite",
+            "vixen", "witty", "xylem", "yummy", "zesty"
+        ];
+
+        // Game state variables
+        let targetWord = ''; // The word to be guessed
+        let currentGuess = []; // Letters of the current guess
+        let currentRow = 0; // Current row index (0-5)
+        let gameOver = false; // Flag to indicate if the game is over
+
+        const MAX_ATTEMPTS = 6; // Maximum number of guesses allowed
+        const WORD_LENGTH = 5; // Length of the target word
+
+        // DOM elements
+        const gameGrid = document.getElementById('game-grid');
+        const keyboard = document.getElementById('keyboard');
+        const gameOverModal = document.getElementById('gameOverModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const playAgainButton = document.getElementById('playAgainButton');
+        const getDefinitionButton = document.getElementById('getDefinitionButton');
+        const definitionContainer = document.getElementById('definitionContainer');
+
+        // Function to initialize the game board
+        function initializeGrid() {
+            gameGrid.innerHTML = ''; // Clear existing grid
+            for (let i = 0; i < MAX_ATTEMPTS; i++) {
+                for (let j = 0; j < WORD_LENGTH; j++) {
+                    const tile = document.createElement('div');
+                    tile.classList.add('tile');
+                    tile.id = `tile-${i}-${j}`; // Unique ID for each tile
+                    gameGrid.appendChild(tile);
+                }
+            }
+        }
+
+        // Function to update the display of the current guess
+        function updateGrid() {
+            for (let i = 0; i < WORD_LENGTH; i++) {
+                const tile = document.getElementById(`tile-${currentRow}-${i}`);
+                if (tile) {
+                    tile.textContent = currentGuess[i] || ''; // Display letter or empty string
+                }
+            }
+        }
+
+        // Function to handle keyboard input (physical and on-screen)
+        function handleKeyPress(key) {
+            if (gameOver) return; // Do nothing if game is over
+
+            if (key === 'enter') {
+                if (currentGuess.length === WORD_LENGTH) {
+                    checkGuess(); // Check the guess if it's a full word
+                } else {
+                    // Provide feedback for incomplete word (e.g., shake row, alert)
+                    console.log('Not enough letters!');
+                }
+            } else if (key === 'backspace') {
+                currentGuess.pop(); // Remove the last letter
+            } else if (key.length === 1 && key.match(/[a-z]/)) {
+                if (currentGuess.length < WORD_LENGTH) {
+                    currentGuess.push(key); // Add letter if space available
+                }
+            }
+            updateGrid(); // Update the grid display
+        }
+
+        // Function to check the guessed word against the target word
+        function checkGuess() {
+            const guessWord = currentGuess.join(''); // Convert current guess array to string
+            const targetWordLetters = targetWord.split(''); // Target word as an array of letters
+            const guessedLetters = Array.from(currentGuess); // Copy of current guess letters
+
+            // Create a frequency map for target word letters
+            const targetLetterCounts = {};
+            for (const char of targetWordLetters) {
+                targetLetterCounts[char] = (targetLetterCounts[char] || 0) + 1;
+            }
+
+            // First pass: Mark correct (green) letters
+            for (let i = 0; i < WORD_LENGTH; i++) {
+                const tile = document.getElementById(`tile-${currentRow}-${i}`);
+                const keyElement = document.querySelector(`.key[data-key="${guessedLetters[i]}"]`);
+
+                if (guessedLetters[i] === targetWordLetters[i]) {
+                    tile.classList.add('correct');
+                    if (keyElement) keyElement.classList.add('correct-key');
+                    targetLetterCounts[guessedLetters[i]]--; // Decrement count for matched letter
+                    guessedLetters[i] = null; // Mark as processed
+                }
+            }
+
+            // Second pass: Mark present (yellow) and absent (gray) letters
+            for (let i = 0; i < WORD_LENGTH; i++) {
+                const tile = document.getElementById(`tile-${currentRow}-${i}`);
+                const keyElement = document.querySelector(`.key[data-key="${currentGuess[i]}"]`);
+
+                if (guessedLetters[i] === null) continue; // Already processed (correct)
+
+                if (targetWordLetters.includes(guessedLetters[i]) && targetLetterCounts[guessedLetters[i]] > 0) {
+                    tile.classList.add('present');
+                    if (keyElement && !keyElement.classList.contains('correct-key')) {
+                        keyElement.classList.add('present-key');
+                    }
+                    targetLetterCounts[guessedLetters[i]]--; // Decrement count for matched letter
+                } else {
+                    tile.classList.add('absent');
+                    if (keyElement && !keyElement.classList.contains('correct-key') && !keyElement.classList.contains('present-key')) {
+                        keyElement.classList.add('absent-key');
+                    }
+                }
+            }
+
+            // Check for win/loss conditions
+            if (guessWord === targetWord) {
+                displayResult(true); // Player wins
+            } else if (currentRow === MAX_ATTEMPTS - 1) {
+                displayResult(false); // Player loses
+            } else {
+                currentRow++; // Move to the next row
+                currentGuess = []; // Reset current guess for the new row
+            }
+        }
+
+        // Function to display the game result modal
+        function displayResult(win) {
+            gameOver = true;
+            if (win) {
+                modalTitle.textContent = 'You Won!';
+                modalMessage.textContent = `Congratulations! You guessed the word "${targetWord.toUpperCase()}"!`;
+            } else {
+                modalTitle.textContent = 'Game Over!';
+                modalMessage.textContent = `The word was "${targetWord.toUpperCase()}". Better luck next time!`;
+            }
+            gameOverModal.classList.remove('hidden'); // Show the modal
+            definitionContainer.innerHTML = ''; // Clear previous definition
+            getDefinitionButton.style.display = 'block'; // Show the definition button
+        }
+
+        // Function to reset the game
+        function resetGame() {
+            targetWord = WORDS[Math.floor(Math.random() * WORDS.length)]; // Pick a new random word
+            currentGuess = [];
+            currentRow = 0;
+            gameOver = false;
+            initializeGrid(); // Re-initialize the grid
+            // Reset keyboard key colors
+            document.querySelectorAll('.key').forEach(key => {
+                key.classList.remove('correct-key', 'present-key', 'absent-key');
+            });
+            gameOverModal.classList.add('hidden'); // Hide the modal
+            definitionContainer.innerHTML = ''; // Clear definition
+            getDefinitionButton.style.display = 'none'; // Hide the definition button initially
+            console.log("New target word:", targetWord); // For debugging
+        }
+
+        // Function to get word definition using Gemini API
+        async function getWordDefinition() {
+            definitionContainer.innerHTML = '<div class="loading-spinner"></div><p class="text-sm mt-2">Fetching definition...</p>'; // Show loading
+            getDefinitionButton.disabled = true; // Disable button while loading
+
+            try {
+                let chatHistory = [];
+                const prompt = `Provide a concise definition for the word "${targetWord}".`;
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                const payload = { contents: chatHistory };
+                const apiKey = ""; // Leave as-is for Canvas environment
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const definition = result.candidates[0].content.parts[0].text;
+                    definitionContainer.innerHTML = `<p class="definition-text">${definition}</p>`;
+                } else {
+                    definitionContainer.innerHTML = '<p class="definition-text text-red-400">Could not fetch definition. Please try again.</p>';
+                }
+            } catch (error) {
+                console.error("Error fetching definition:", error);
+                definitionContainer.innerHTML = '<p class="definition-text text-red-400">Error fetching definition. Please check your network connection.</p>';
+            } finally {
+                getDefinitionButton.disabled = false; // Re-enable button
+            }
+        }
+
+        // Event Listeners
+
+        // Listen for physical keyboard input
+        document.addEventListener('keydown', (event) => {
+            const key = event.key.toLowerCase();
+            if (key === 'enter' || key === 'backspace' || (key.length === 1 && key.match(/[a-z]/))) {
+                handleKeyPress(key);
+            }
+        });
+
+        // Listen for on-screen keyboard clicks
+        keyboard.addEventListener('click', (event) => {
+            if (event.target.classList.contains('key')) {
+                const key = event.target.dataset.key;
+                handleKeyPress(key);
+            }
+        });
+
+        // Listen for "Play Again" button click
+        playAgainButton.addEventListener('click', resetGame);
+
+        // Listen for "Get Definition" button click
+        getDefinitionButton.addEventListener('click', getWordDefinition);
+
+        // Initialize the game when the window loads
+        window.onload = resetGame; // Call resetGame to start the first game
+    </script>
+</body>
+</html>

@@ -15,7 +15,8 @@ The goal is to guess a **five-letter word in six attempts or less**.
   - 🟨 **Yellow:** Correct letter, wrong position.  
   - ⬜ **Gray:** Letter not in the word.  
 - **On-Screen Keyboard:** Enables you to play easily on mobile.  
-- **Modal Pop-ups:** Get instant win/loss feedback with a **Play Again** option.  
+- **Modal Pop-ups:** Get instant win/loss feedback with a **Play Again** option.
+- **Rules Button** Displays the rules of the game.
 
 ---
 

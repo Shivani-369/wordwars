@@ -308,8 +308,8 @@
 
         // Function to handle keyboard input (physical and on-screen)
         function handleKeyPress(key) {
-            if (gameOver || rulesModal.classList.contains('hidden')) {
-                // Ignore input if game is over or rules modal is open
+            // FIX: Corrected logic to only block input when a modal is actively displayed
+            if (gameOver || !rulesModal.classList.contains('hidden')) {
                 return;
             }
 

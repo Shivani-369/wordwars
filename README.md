@@ -9,12 +9,12 @@ The goal is to guess a **five-letter word in six attempts or less**.
 
 ## ✨ Features
 - **Clean, Minimalist Design:** Dark theme with a distraction-free interface.  
-- **Underline Style:** Letters are displayed on elegant underlines instead of boxes.  
+- **Underline Style:** Letters are displayed on elegant underlines.  
 - **Color-Coded Feedback:**  
   - 🟩 **Green:** Correct letter in the right position.  
   - 🟨 **Yellow:** Correct letter, wrong position.  
   - ⬜ **Gray:** Letter not in the word.  
-- **On-Screen Keyboard:** Play easily on desktop or mobile.  
+- **On-Screen Keyboard:** Enables you to play easily on mobile.  
 - **Modal Pop-ups:** Get instant win/loss feedback with a **Play Again** option.  
 
 ---
